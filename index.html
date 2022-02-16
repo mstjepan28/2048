@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+
+    <link rel="stylesheet" href="styles/style.css">
+</head>
+<body>
+    <div id="gameOver" class="gameOverScreen">
+        GAME OVER
+        <span id="gameOverScore"></span>
+        <button id="gameOverReset">RESET</button>
+    </div>
+
+    <div class="game_container">
+        <div class="game_header">
+            <span id="score">SCORE: 0</span>
+            <div class="controls">
+                <button id="controls_reset">RESET</button>
+                <button id="controls_undo">UNDO</button>
+            </div>
+        </div>
+
+        <div class="game_window">
+            <div id="active_board" class="active_board">
+    
+            </div>
+    
+            <div class="game_board">
+                <div class="game_board_row">
+                    <div></div>
+                    <div></div>
+                    <div></div>
+                    <div></div>
+                </div>
+                <div class="game_board_row">
+                    <div></div>
+                    <div></div>
+                    <div></div>
+                    <div></div>
+                </div>
+                <div class="game_board_row">
+                    <div></div>
+                    <div></div>
+                    <div></div>
+                    <div></div>
+                </div>
+                <div class="game_board_row">
+                    <div></div>
+                    <div></div>
+                    <div></div>
+                    <div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script defer src="./js/index.js"></script>
+</body>
+</html>
