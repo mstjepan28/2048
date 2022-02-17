@@ -9,7 +9,7 @@ let score = 0;
 const objectSize = 150;
 const objectSpacing = 10;
 
-let coolDown = false;
+let disableMovement = false;
 let elementsMoved = false;
 let previousGameStates = [];
 
@@ -25,7 +25,9 @@ const randInt = (min, max) => Math.floor(Math.random() * (max - min + 1) + min);
     const fillBoard = () => { // DEBUG
         for(let row = 0; row < 4; row++){
             for(let col = 0; col < 4; col++){
+                if(row == 3 && col == 3) return;
                 //if(col % 2 == 0) continue;
+                elementNum++;
 
                 const newElement = document.createElement('div');
                 newElement.classList.add("game_object");
@@ -35,7 +37,7 @@ const randInt = (min, max) => Math.floor(Math.random() * (max - min + 1) + min);
                     domElement: newElement,
                     xCord: pos.x,
                     yCord: pos.y,
-                    value: col+row,
+                    value: elementNum,
                     moved: false,
                 }
                 
@@ -67,12 +69,10 @@ const saveCurGameState = () => {
 }
 
 const loadLastGameState = () => {
-    
     const boardDomElement = document.getElementById("active_board");
     const lastState = previousGameStates[previousGameStates.length - 1];
+
     if(!lastState) return;
-    
-    console.log(previousGameStates[previousGameStates.length - 1])
 
     for(let row = 0; row < 4; row++){
         for(let col = 0; col < 4; col++){
@@ -108,9 +108,34 @@ const resetGame = () => {
         [0, 0, 0, 0]
     ],
     score = 0;
+    disableMovement = false;
     previousGameStates = []
 
     getNewElement();
+}
+
+const checkForGameOver = () => {
+    if(getRandomPosition()) return; // if there are any empty spots, game is not over
+
+    let gameOver = false;
+
+    for(let row = 0; row < 4; row++){
+        for(let col = 0; col < 4; col++){
+            const gameObject = gameBoard[col][row];
+
+            gameOver = ![
+                gameBoard[clamp(row - 1, 0, 3)][clamp(col - 1, 0, 3)],
+                gameBoard[clamp(row + 1, 0, 3)][clamp(col - 1, 0, 3)],
+                gameBoard[clamp(row - 1, 0, 3)][clamp(col + 1, 0, 3)],
+                gameBoard[clamp(row + 1, 0, 3)][clamp(col + 1, 0, 3)] ,
+            ].filter(neighbor => {
+                return gameObject != neighbor && gameObject.value == neighbor.value 
+            }).length;
+            console.log(gameOver)
+
+            if(gameOver) return triggerGameOver();
+        }
+    }
 }
 
 const triggerGameOver = () => {
@@ -144,6 +169,12 @@ const getNewElement = () => {
     newElement.innerText = randValue;
 
     document.getElementById("active_board").appendChild(newElement);
+
+    if(randValue == 4){
+        newElement.style.backgroundColor = "#ece0ca";
+        newElement.style.color = "#7e817d";
+    }
+
     saveCurGameState();
 }
 
@@ -239,7 +270,6 @@ const moveGameObjects = (gameObject, moveBy) => {
     moveGameObjects(gameObject, moveBy);
 }
 
-
 const moveUp = (movement) => {
     for(let row = 0; row < 4; row++){
         for(let col = 0; col < 4; col++){
@@ -282,25 +312,18 @@ const moveRight = (movement) => {
 }
 
 const keyboardEventHandler = (event) => {
-    if(coolDown) return;
-    coolDown = true;
+    if(disableMovement) return;
+    disableMovement = true;
 
     elementsMoved = false;
 
-    switch(event.key){
-        case "ArrowUp":
-            moveUp({x: 0, y: -1});
-            break;
-        case "ArrowDown":
-            moveDown({x: 0, y: 1});
-            break;
-        case "ArrowLeft":
-            moveLeft({x: -1, y: 0});
-            break;
-        case "ArrowRight":
-            moveRight({x: 1, y: 0});
-            break;
+    const moveHandler = {
+        ArrowUp: () => moveUp({x: 0, y: -1}),
+        ArrowDown: () => moveDown({x: 0, y: 1}),
+        ArrowLeft: () => moveLeft({x: -1, y: 0}),
+        ArrowRight: () => moveRight({x: 1, y: 0}),
     }
+    moveHandler[event.key]?.();
 
     gameBoard.forEach(row => {
         row.forEach(gameObject => {
@@ -309,12 +332,13 @@ const keyboardEventHandler = (event) => {
     })
 
     setTimeout(() => {
-        if(elementsMoved) getNewElement()
-        coolDown = false
+        if(elementsMoved) getNewElement();
+        checkForGameOver();
+        disableMovement = false
     }, 250)
 }
 
-fillBoard();//DEBUG
+//fillBoard();//DEBUG
 getNewElement();
 
 document.addEventListener('keydown', keyboardEventHandler);
