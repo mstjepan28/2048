@@ -25,7 +25,7 @@ const randInt = (min, max) => Math.floor(Math.random() * (max - min + 1) + min);
     const fillBoard = () => { // DEBUG
         for(let row = 0; row < 4; row++){
             for(let col = 0; col < 4; col++){
-                if(row == 3 && col == 3) return;
+                //if(row == 3 && col == 3) return;
                 //if(col % 2 == 0) continue;
                 elementNum++;
 
@@ -37,7 +37,7 @@ const randInt = (min, max) => Math.floor(Math.random() * (max - min + 1) + min);
                     domElement: newElement,
                     xCord: pos.x,
                     yCord: pos.y,
-                    value: elementNum,
+                    value: col+row,
                     moved: false,
                 }
                 
@@ -55,6 +55,32 @@ const randInt = (min, max) => Math.floor(Math.random() * (max - min + 1) + min);
     const showOrder = (gameObject) => {
         gameObject.domElement.style.backgroundColor = "red";
         setTimeout(() => gameObject.domElement.style.backgroundColor = "", 1500)
+    }
+
+    const testGameOver = () => {
+        let row = 3;
+        let col = 3;
+
+        const gameObject = gameBoard[row][col];
+
+        const neighborList = [
+            gameBoard[clamp(row, 0, 3)][clamp(col - 1, 0, 3)],
+            gameBoard[clamp(row, 0, 3)][clamp(col + 1, 0, 3)],
+            gameBoard[clamp(row - 1, 0, 3)][clamp(col, 0, 3)],
+            gameBoard[clamp(row + 1, 0, 3)][clamp(col, 0, 3)],
+        ]
+
+        gameObject.domElement.style.background = "red";
+        neighborList.forEach(elem => {
+            if(elem != gameObject)
+            elem.domElement.style.background = "blue";
+        })
+
+        const matchingNeighbors = neighborList.filter(neighbor => {
+            return gameObject != neighbor && gameObject.value == neighbor.value 
+        });
+
+        if(matchingNeighbors.length != 0) return;
     }
 /* ******************************************************************************************** */
 /* ********************************************************************************************* */
@@ -92,6 +118,8 @@ const loadLastGameState = () => {
 }
 
 const resetGame = () => {
+    if(score == 0) return;
+    
     document.getElementById("gameOver").classList.remove("activeGameOver");
 
     for(let row = 0; row < 4; row++){
@@ -107,42 +135,45 @@ const resetGame = () => {
         [0, 0, 0, 0],
         [0, 0, 0, 0]
     ],
-    score = 0;
     disableMovement = false;
     previousGameStates = []
-
+    
+    updateScore(-score);
     getNewElement();
 }
 
 const checkForGameOver = () => {
     if(getRandomPosition()) return; // if there are any empty spots, game is not over
 
-    let gameOver = false;
-
     for(let row = 0; row < 4; row++){
         for(let col = 0; col < 4; col++){
-            const gameObject = gameBoard[col][row];
+            const gameObject = gameBoard[row][col];
 
-            gameOver = ![
-                gameBoard[clamp(row - 1, 0, 3)][clamp(col - 1, 0, 3)],
-                gameBoard[clamp(row + 1, 0, 3)][clamp(col - 1, 0, 3)],
-                gameBoard[clamp(row - 1, 0, 3)][clamp(col + 1, 0, 3)],
-                gameBoard[clamp(row + 1, 0, 3)][clamp(col + 1, 0, 3)] ,
-            ].filter(neighbor => {
+            const neighborList = [
+                gameBoard[clamp(row, 0, 3)][clamp(col - 1, 0, 3)],
+                gameBoard[clamp(row, 0, 3)][clamp(col + 1, 0, 3)],
+                gameBoard[clamp(row - 1, 0, 3)][clamp(col, 0, 3)],
+                gameBoard[clamp(row + 1, 0, 3)][clamp(col, 0, 3)],
+            ]
+    
+            const matchingNeighbors = neighborList.filter(neighbor => {
                 return gameObject != neighbor && gameObject.value == neighbor.value 
-            }).length;
-            console.log(gameOver)
-
-            if(gameOver) return triggerGameOver();
+            });
+    
+            if(matchingNeighbors.length != 0) return;
         }
     }
+
+    triggerGameOver();
 }
 
 const triggerGameOver = () => {
-    document.getElementById("gameOver").classList.add("activeGameOver");
-    document.getElementById("gameOverScore").innerText = `FINAL SCORE: ${score}`;
-    
+    disableMovement = true;
     score = 0;
+    setTimeout(() => {
+        document.getElementById("gameOver").classList.add("activeGameOver");
+        document.getElementById("gameOverScore").innerText = `FINAL SCORE: ${score}`;
+    }, 250)
 }
 
 const getNewElement = () => {
@@ -206,7 +237,6 @@ const getRandomPosition = () => {
 
 const updateScore = (scoreAddition) => {
     score += scoreAddition;
-
     document.getElementById("score").innerText = `SCORE: ${score}`
 }
 
@@ -338,7 +368,8 @@ const keyboardEventHandler = (event) => {
     }, 250)
 }
 
-//fillBoard();//DEBUG
+//fillBoard(); //DEBUG
+//testGameOver(); //DEBUG - needs fillBoard() to work
 getNewElement();
 
 document.addEventListener('keydown', keyboardEventHandler);
